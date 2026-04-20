@@ -3,324 +3,275 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chess Fusion Pro | Fluid & Modern</title>
+    <title>Chess Fusion | Fluid Motion</title>
     <style>
         :root {
             --bg: #0f172a;
-            --glass: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.1);
             --accent: #6366f1;
-            --text: #f8fafc;
-            /* Tahta Renkleri - Modern Pastel */
             --sq-l: #e2e8f0; 
             --sq-d: #94a3b8;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
         }
 
-        body.theme-midnight {
-            --bg: #020617;
-            --accent: #0ea5e9;
-            --sq-l: #1e293b;
-            --sq-d: #0f172a;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
 
         body {
             background-color: var(--bg);
-            color: var(--text);
+            color: white;
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
-            transition: all 0.5s ease;
-        }
-
-        /* Arka plan akışkanlığı */
-        .bg-glow {
-            position: absolute;
-            width: 600px; height: 600px;
-            background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
-            filter: blur(80px);
-            opacity: 0.15;
-            z-index: -1;
-            animation: pulse 10s infinite alternate;
-        }
-
-        @keyframes pulse {
-            from { transform: scale(1) translate(-10%, -10%); }
-            to { transform: scale(1.2) translate(10%, 10%); }
         }
 
         .container {
             display: flex;
-            width: 95vw;
-            max-width: 1200px;
-            height: 90vh;
             background: var(--glass);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
             border-radius: 24px;
-            padding: 24px;
-            gap: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            padding: 20px;
+            gap: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
 
-        /* Tahta Alanı - Çökme Sorunu Çözüldü */
-        .board-wrapper {
-            flex: 1.5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: rgba(0,0,0,0.2);
-            border-radius: 16px;
-            padding: 10px;
-        }
-
-        #board {
-            display: grid;
-            grid-template-columns: repeat(8, 12.5%);
-            grid-template-rows: repeat(8, 12.5%);
-            width: 100%;
-            max-width: 600px;
-            aspect-ratio: 1 / 1; /* Kare formunu zorunlu kılar */
+        /* Tahta ve Taşların Konumlandırması */
+        .board-container {
+            position: relative;
+            width: 560px;
+            height: 560px;
+            background: #222;
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 0 40px rgba(0,0,0,0.4);
-            border: 4px solid rgba(255,255,255,0.05);
+        }
+
+        .board-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            width: 100%;
+            height: 100%;
         }
 
         .square {
             width: 100%;
             height: 100%;
+            transition: background 0.3s;
+        }
+
+        .square.highlight { background: rgba(99, 102, 241, 0.4) !important; cursor: pointer; }
+
+        /* Taş Animasyonu */
+        .piece {
+            position: absolute;
+            width: 70px;
+            height: 70px;
             display: flex;
             justify-content: center;
             align-items: center;
+            font-size: 45px;
             cursor: pointer;
-            position: relative;
-            transition: background 0.2s ease;
-        }
-
-        /* Taşların Görünümü */
-        .piece {
-            font-size: clamp(1.5rem, 4vw, 3rem);
-            z-index: 2;
-            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.4s cubic-bezier(0.45, 0.05, 0.55, 0.95); /* Yumuşak kayma */
+            z-index: 10;
             user-select: none;
-            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.3));
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.4));
         }
 
-        .square:hover .piece { transform: scale(1.15); }
-
-        /* Durum Efektleri */
-        .square.selected { background: var(--accent) !important; opacity: 0.8; }
-        .square.valid-move::after {
-            content: '';
-            width: 15px; height: 15px;
-            background: rgba(255,255,255,0.3);
-            border-radius: 50%;
-        }
+        .piece:hover { transform: scale(1.1); }
+        .piece.selected { filter: drop-shadow(0 0 15px var(--accent)); z-index: 20; }
 
         /* Yan Panel */
-        .ui-panel {
-            flex: 0.8;
+        .panel {
+            width: 250px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px;
         }
 
         .card {
-            background: rgba(255,255,255,0.05);
-            padding: 20px;
-            border-radius: 16px;
-            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
         }
 
-        .turn-indicator {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-
-        .dot { width: 12px; height: 12px; border-radius: 50%; background: #fff; }
-        .dot.black { background: #000; border: 1px solid #fff; }
-
-        select, button {
+        button {
             width: 100%;
-            padding: 12px;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid var(--glass-border);
-            color: #fff;
-            border-radius: 10px;
+            padding: 10px;
+            background: var(--accent);
+            border: none;
+            color: white;
+            border-radius: 8px;
             cursor: pointer;
-            margin-top: 8px;
-            transition: all 0.3s;
+            font-weight: bold;
         }
 
-        button:hover { background: var(--accent); }
-
-        .history {
-            flex-grow: 1;
-            overflow-y: auto;
-            font-size: 0.85rem;
-            opacity: 0.7;
-            max-height: 200px;
-        }
-
-        @media (max-width: 850px) {
-            .container { flex-direction: column; height: 95vh; padding: 12px; }
-            .ui-panel { flex: 1; }
+        @media (max-width: 800px) {
+            .container { flex-direction: column; }
+            .board-container { width: 90vw; height: 90vw; }
+            .piece { width: 11.25vw; height: 11.25vw; font-size: 8vw; }
         }
     </style>
 </head>
-<body class="theme-dark">
+<body>
 
-    <div class="bg-glow"></div>
+    <div class="container">
+        <div class="board-container" id="board-container">
+            <div class="board-grid" id="grid"></div>
+            </div>
 
-    <main class="container">
-        <section class="board-wrapper">
-            <div id="board"></div>
-        </section>
-
-        <aside class="ui-panel">
+        <div class="panel">
             <div class="card">
-                <div class="turn-indicator">
-                    <div id="turn-dot" class="dot"></div>
-                    <span id="turn-text">Beyazın Sırası</span>
-                </div>
+                <h3 id="turn-text">Sıra: Beyaz</h3>
             </div>
-
-            <div class="card">
-                <h3>Özelleştir</h3>
-                <label>Görünüm
-                    <select onchange="document.body.className = this.value">
-                        <option value="theme-dark">Dark Minimal</option>
-                        <option value="theme-midnight">Midnight Blue</option>
-                    </select>
-                </label>
-                <button onclick="resetGame()" style="margin-top: 15px;">Yeni Oyun</button>
+            <div class="card" style="flex-grow: 1; overflow-y: auto;" id="history">
+                <small>Hamle Geçişleri:</small>
             </div>
-
-            <div class="card history" id="move-history">
-                <div>Hamleler bekleniyor...</div>
-            </div>
-            
-            <div style="font-size: 0.7rem; opacity: 0.4; text-align: center;">
-                Onur Karataş Projesi v2.0
-            </div>
-        </aside>
-    </main>
+            <button onclick="resetGame()">Yeni Oyun</button>
+        </div>
+    </div>
 
     <script>
-        const boardEl = document.getElementById('board');
+        const container = document.getElementById('board-container');
+        const grid = document.getElementById('grid');
         const turnText = document.getElementById('turn-text');
-        const turnDot = document.getElementById('turn-dot');
-        const historyEl = document.getElementById('move-history');
-
-        let board = Array(64).fill(null);
-        let selectedIdx = null;
+        
         let turn = 'w';
+        let selectedPiece = null;
+        let piecesData = [];
 
-        const pieceIcons = {
-            'w': { k: '♔', q: '♕', r: '♖', b: '♗', n: '♘', p: '♙' },
-            'b': { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' }
+        const icons = {
+            w: { k: '♔', q: '♕', r: '♖', b: '♗', n: '♘', p: '♙' },
+            b: { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' }
         };
 
-        function setup() {
-            board = Array(64).fill(null);
-            const layout = ['r','n','b','q','k','b','n','r'];
-            
-            for(let i=0; i<8; i++) {
-                board[i] = { type: layout[i], color: 'b' };
-                board[i+8] = { type: 'p', color: 'b' };
-                board[48+i] = { type: 'p', color: 'w' };
-                board[56+i] = { type: layout[i], color: 'w' };
-            }
-            render();
-        }
-
-        function render() {
-            boardEl.innerHTML = '';
-            for(let i=0; i<64; i++) {
-                const square = document.createElement('div');
-                square.className = 'square';
-                
-                // Kare Rengi
+        function createGrid() {
+            grid.innerHTML = '';
+            for (let i = 0; i < 64; i++) {
+                const sq = document.createElement('div');
+                sq.className = 'square';
                 const row = Math.floor(i / 8);
                 const col = i % 8;
-                square.style.backgroundColor = (row + col) % 2 === 0 ? 'var(--sq-l)' : 'var(--sq-d)';
-
-                if(board[i]) {
-                    const p = document.createElement('div');
-                    p.className = 'piece';
-                    p.textContent = pieceIcons[board[i].color][board[i].type];
-                    p.style.color = board[i].color === 'w' ? '#fff' : '#000';
-                    square.appendChild(p);
-                }
-
-                if(selectedIdx === i) square.classList.add('selected');
-
-                square.onclick = () => handleClick(i);
-                boardEl.appendChild(square);
+                sq.style.backgroundColor = (row + col) % 2 === 0 ? 'var(--sq-l)' : 'var(--sq-d)';
+                sq.dataset.index = i;
+                sq.onclick = () => handleSquareClick(i);
+                grid.appendChild(sq);
             }
         }
 
-        function handleClick(i) {
-            const piece = board[i];
+        function spawnPieces() {
+            const layout = ['r','n','b','q','k','b','n','r'];
+            // Temizle
+            document.querySelectorAll('.piece').forEach(p => p.remove());
+            piecesData = [];
 
-            if(selectedIdx === null) {
-                if(piece && piece.color === turn) {
-                    selectedIdx = i;
-                }
-            } else {
-                if(i !== selectedIdx) {
-                    executeMove(selectedIdx, i);
-                }
-                selectedIdx = null;
+            // Siyah
+            for(let i=0; i<8; i++) {
+                addPiece(i, layout[i], 'b');
+                addPiece(i+8, 'p', 'b');
             }
-            render();
+            // Beyaz
+            for(let i=0; i<8; i++) {
+                addPiece(48+i, 'p', 'w');
+                addPiece(56+i, layout[i], 'w');
+            }
         }
 
-        function executeMove(from, to) {
-            // Basit hareket mantığı (Kural kontrolü buraya eklenebilir)
-            const movingPiece = board[from];
-            board[to] = movingPiece;
-            board[from] = null;
+        function addPiece(index, type, color) {
+            const el = document.createElement('div');
+            el.className = 'piece';
+            el.innerHTML = icons[color][type];
+            el.style.color = color === 'w' ? '#fff' : '#000';
+            
+            const pieceObj = { el, index, type, color };
+            updatePiecePosition(pieceObj);
+            
+            el.onclick = (e) => {
+                e.stopPropagation();
+                handlePieceClick(pieceObj);
+            };
 
-            // Sıra değişimi
+            container.appendChild(el);
+            piecesData.push(pieceObj);
+        }
+
+        function updatePiecePosition(piece) {
+            const row = Math.floor(piece.index / 8);
+            const col = piece.index % 8;
+            // 70px kare boyutu üzerinden hesapla (560/8)
+            const size = container.offsetWidth / 8;
+            piece.el.style.left = (col * size) + 'px';
+            piece.el.style.top = (row * size) + 'px';
+            piece.el.style.width = size + 'px';
+            piece.el.style.height = size + 'px';
+        }
+
+        function handlePieceClick(piece) {
+            if (piece.color !== turn) {
+                if (selectedPiece) handleSquareClick(piece.index);
+                return;
+            }
+            
+            // Seçimi temizle
+            document.querySelectorAll('.piece').forEach(p => p.classList.remove('selected'));
+            
+            selectedPiece = piece;
+            piece.el.classList.add('selected');
+        }
+
+        function handleSquareClick(targetIndex) {
+            if (!selectedPiece) return;
+
+            // At yok olmasın diye: Hedefte taş varsa onu ye (sil)
+            const victimIndex = piecesData.findIndex(p => p.index === targetIndex);
+            if (victimIndex !== -1) {
+                const victim = piecesData[victimIndex];
+                if (victim.color === selectedPiece.color) {
+                    // Aynı renkse sadece seçimi değiştir
+                    handlePieceClick(victim);
+                    return;
+                } else {
+                    // Farklı renkse taşı ye
+                    victim.el.style.opacity = '0';
+                    victim.el.style.transform = 'scale(0)';
+                    setTimeout(() => victim.el.remove(), 400);
+                    piecesData.splice(victimIndex, 1);
+                }
+            }
+
+            // Hareketi Yap
+            selectedPiece.index = targetIndex;
+            updatePiecePosition(selectedPiece);
+            
+            // Sırayı Değiştir
             turn = turn === 'w' ? 'b' : 'w';
-            updateUI();
+            turnText.innerText = `Sıra: ${turn === 'w' ? 'Beyaz' : 'Siyah'}`;
             
-            // Ses efekti simülasyonu veya titreşim
-            if(window.navigator.vibrate) window.navigator.vibrate(10);
-            
-            logMove(from, to, movingPiece);
-        }
-
-        function updateUI() {
-            turnText.textContent = turn === 'w' ? 'Beyazın Sırası' : 'Siyahın Sırası';
-            turnDot.className = turn === 'w' ? 'dot' : 'dot black';
-        }
-
-        function logMove(f, t, p) {
-            const div = document.createElement('div');
-            const coords = (idx) => String.fromCharCode(97 + (idx % 8)) + (8 - Math.floor(idx / 8));
-            div.textContent = `${p.type.toUpperCase()}: ${coords(f)} → ${coords(t)}`;
-            historyEl.prepend(div);
+            // Seçimi kaldır
+            selectedPiece.el.classList.remove('selected');
+            selectedPiece = null;
         }
 
         function resetGame() {
             turn = 'w';
-            selectedIdx = null;
-            historyEl.innerHTML = '';
-            updateUI();
-            setup();
+            turnText.innerText = "Sıra: Beyaz";
+            selectedPiece = null;
+            createGrid();
+            spawnPieces();
         }
 
-        setup();
+        // İlk başlatma
+        window.onload = () => {
+            createGrid();
+            spawnPieces();
+        };
+
+        // Pencere boyutu değişirse taşları yeniden hizala
+        window.onresize = () => {
+            piecesData.forEach(p => updatePiecePosition(p));
+        };
     </script>
 </body>
 </html>
