@@ -3,340 +3,324 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chess Fusion | Minimalist & Modern</title>
+    <title>Chess Fusion Pro | Fluid & Modern</title>
     <style>
-        /* --- CSS: Tasarım ve Glassmorphism --- */
         :root {
-            --bg-color: #0f172a;
-            --glass-bg: rgba(255, 255, 255, 0.05);
+            --bg: #0f172a;
+            --glass: rgba(255, 255, 255, 0.03);
             --glass-border: rgba(255, 255, 255, 0.1);
             --accent: #6366f1;
             --text: #f8fafc;
-            --square-light: rgba(255, 255, 255, 0.1);
-            --square-dark: rgba(0, 0, 0, 0.2);
-        }
-
-        /* Temalar */
-        body.theme-light {
-            --bg-color: #f1f5f9;
-            --glass-bg: rgba(255, 255, 255, 0.7);
-            --glass-border: rgba(0, 0, 0, 0.1);
-            --text: #1e293b;
-            --square-light: #e2e8f0;
-            --square-dark: #94a3b8;
+            /* Tahta Renkleri - Modern Pastel */
+            --sq-l: #e2e8f0; 
+            --sq-d: #94a3b8;
         }
 
         body.theme-midnight {
-            --bg-color: #020617;
-            --accent: #38bdf8;
-            --square-light: rgba(56, 189, 248, 0.1);
-            --square-dark: rgba(0, 0, 0, 0.4);
+            --bg: #020617;
+            --accent: #0ea5e9;
+            --sq-l: #1e293b;
+            --sq-d: #0f172a;
         }
 
-        * { margin: 0; padding: 0; box-box: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
 
         body {
-            background-color: var(--bg-color);
+            background-color: var(--bg);
             color: var(--text);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
-            transition: background 0.5s ease;
+            transition: all 0.5s ease;
         }
 
-        /* Arka Plan Efekti */
-        .blob {
+        /* Arka plan akışkanlığı */
+        .bg-glow {
             position: absolute;
-            width: 500px;
-            height: 500px;
-            background: linear-gradient(135deg, var(--accent), #a855f7);
-            filter: blur(100px);
-            border-radius: 50%;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+            filter: blur(80px);
+            opacity: 0.15;
             z-index: -1;
-            opacity: 0.4;
-            animation: float 20s infinite alternate;
+            animation: pulse 10s infinite alternate;
         }
 
-        @keyframes float {
-            from { transform: translate(-20%, -20%); }
-            to { transform: translate(20%, 20%); }
+        @keyframes pulse {
+            from { transform: scale(1) translate(-10%, -10%); }
+            to { transform: scale(1.2) translate(10%, 10%); }
         }
 
-        .main-container {
+        .container {
             display: flex;
-            width: 90%;
-            max-width: 1100px;
-            height: 85vh;
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            width: 95vw;
+            max-width: 1200px;
+            height: 90vh;
+            background: var(--glass);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
             border: 1px solid var(--glass-border);
-            border-radius: 30px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            padding: 20px;
-            gap: 20px;
+            border-radius: 24px;
+            padding: 24px;
+            gap: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
         }
 
-        /* Oyun Alanı */
-        .board-container {
+        /* Tahta Alanı - Çökme Sorunu Çözüldü */
+        .board-wrapper {
             flex: 1.5;
             display: flex;
             justify-content: center;
             align-items: center;
+            background: rgba(0,0,0,0.2);
+            border-radius: 16px;
+            padding: 10px;
         }
 
         #board {
             display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            aspect-ratio: 1/1;
+            grid-template-columns: repeat(8, 12.5%);
+            grid-template-rows: repeat(8, 12.5%);
             width: 100%;
-            max-width: 550px;
-            border-radius: 12px;
+            max-width: 600px;
+            aspect-ratio: 1 / 1; /* Kare formunu zorunlu kılar */
+            border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 0 30px rgba(0,0,0,0.2);
+            box-shadow: 0 0 40px rgba(0,0,0,0.4);
+            border: 4px solid rgba(255,255,255,0.05);
         }
 
         .square {
+            width: 100%;
+            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            font-size: 2.5rem;
-            transition: all 0.2s ease;
-            user-select: none;
+            position: relative;
+            transition: background 0.2s ease;
         }
 
-        .square:hover { transform: scale(1.05); z-index: 10; }
-        .square.selected { box-shadow: inset 0 0 20px var(--accent); }
-        .square.last-move { background-color: rgba(99, 102, 241, 0.3) !important; }
+        /* Taşların Görünümü */
+        .piece {
+            font-size: clamp(1.5rem, 4vw, 3rem);
+            z-index: 2;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            user-select: none;
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.3));
+        }
 
-        /* Panel Alanı */
-        .side-panel {
-            flex: 1;
+        .square:hover .piece { transform: scale(1.15); }
+
+        /* Durum Efektleri */
+        .square.selected { background: var(--accent) !important; opacity: 0.8; }
+        .square.valid-move::after {
+            content: '';
+            width: 15px; height: 15px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+        }
+
+        /* Yan Panel */
+        .ui-panel {
+            flex: 0.8;
             display: flex;
             flex-direction: column;
             gap: 20px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 20px;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.05);
             padding: 20px;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
         }
 
-        h2 { font-weight: 300; letter-spacing: 1px; margin-bottom: 10px; }
-
-        .control-group {
-            margin-bottom: 15px;
+        .turn-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+            font-weight: 600;
         }
+
+        .dot { width: 12px; height: 12px; border-radius: 50%; background: #fff; }
+        .dot.black { background: #000; border: 1px solid #fff; }
 
         select, button {
             width: 100%;
-            padding: 10px;
-            background: var(--glass-bg);
+            padding: 12px;
+            background: rgba(0,0,0,0.3);
             border: 1px solid var(--glass-border);
-            color: var(--text);
-            border-radius: 8px;
-            margin-top: 5px;
-            outline: none;
-        }
-
-        .history-box {
-            flex-grow: 1;
-            background: rgba(0,0,0,0.1);
+            color: #fff;
             border-radius: 10px;
-            padding: 10px;
-            font-size: 0.9rem;
-            overflow-y: auto;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.3s;
         }
 
-        /* Mobil Uyumluluk */
-        @media (max-width: 768px) {
-            .main-container { flex-direction: column; height: auto; overflow-y: auto; margin: 20px 0; }
-            #board { max-width: 90vw; }
+        button:hover { background: var(--accent); }
+
+        .history {
+            flex-grow: 1;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            opacity: 0.7;
+            max-height: 200px;
+        }
+
+        @media (max-width: 850px) {
+            .container { flex-direction: column; height: 95vh; padding: 12px; }
+            .ui-panel { flex: 1; }
         }
     </style>
 </head>
 <body class="theme-dark">
 
-    <div class="blob"></div>
+    <div class="bg-glow"></div>
 
-    <main class="main-container">
-        <section class="board-container">
+    <main class="container">
+        <section class="board-wrapper">
             <div id="board"></div>
         </section>
 
-        <aside class="side-panel">
-            <div class="control-group">
-                <h2>Chess Fusion</h2>
-                <div id="game-info">Sıra: <b>Beyaz</b></div>
+        <aside class="ui-panel">
+            <div class="card">
+                <div class="turn-indicator">
+                    <div id="turn-dot" class="dot"></div>
+                    <span id="turn-text">Beyazın Sırası</span>
+                </div>
             </div>
 
-            <div class="control-group">
-                <label>Oyun Modu</label>
-                <select id="mode-select">
-                    <option value="classic">Klasik (1v1 Offline)</option>
-                    <option value="3player" disabled>3 Kişilik (Yakında!)</option>
-                </select>
+            <div class="card">
+                <h3>Özelleştir</h3>
+                <label>Görünüm
+                    <select onchange="document.body.className = this.value">
+                        <option value="theme-dark">Dark Minimal</option>
+                        <option value="theme-midnight">Midnight Blue</option>
+                    </select>
+                </label>
+                <button onclick="resetGame()" style="margin-top: 15px;">Yeni Oyun</button>
             </div>
 
-            <div class="control-group">
-                <label>Tema</label>
-                <select id="theme-select" onchange="changeTheme(this.value)">
-                    <option value="theme-dark">Dark Mode</option>
-                    <option value="theme-midnight">Midnight Blue</option>
-                    <option value="theme-light">Light Mode</option>
-                </select>
+            <div class="card history" id="move-history">
+                <div>Hamleler bekleniyor...</div>
             </div>
-
-            <div class="control-group">
-                <label>Taş Tasarımı</label>
-                <select id="piece-select">
-                    <option value="classic">Klasik (Unicode)</option>
-                    <option value="modern">Minimalist</option>
-                </select>
+            
+            <div style="font-size: 0.7rem; opacity: 0.4; text-align: center;">
+                Onur Karataş Projesi v2.0
             </div>
-
-            <div class="history-box" id="history">
-                Hamle geçmişi burada görünecek...
-            </div>
-
-            <button onclick="resetGame()">Oyunu Sıfırla</button>
         </aside>
     </main>
 
     <script>
-        /* --- JS: Oyun Mantığı --- */
-        const boardElement = document.getElementById('board');
-        const infoElement = document.getElementById('game-info');
-        const historyElement = document.getElementById('history');
-        
-        let boardState = [];
-        let selectedSquare = null;
-        let turn = 'white';
+        const boardEl = document.getElementById('board');
+        const turnText = document.getElementById('turn-text');
+        const turnDot = document.getElementById('turn-dot');
+        const historyEl = document.getElementById('move-history');
 
-        // Taşların Unicode Karşılıkları
-        const pieces = {
-            white: { k: '♔', q: '♕', r: '♖', b: '♗', n: '♘', p: '♙' },
-            black: { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' }
+        let board = Array(64).fill(null);
+        let selectedIdx = null;
+        let turn = 'w';
+
+        const pieceIcons = {
+            'w': { k: '♔', q: '♕', r: '♖', b: '♗', n: '♘', p: '♙' },
+            'b': { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' }
         };
 
-        function initBoard() {
-            // Başlangıç dizilimi (Basit bir şablon)
-            boardState = Array(64).fill(null);
+        function setup() {
+            board = Array(64).fill(null);
+            const layout = ['r','n','b','q','k','b','n','r'];
             
-            // Siyah Taşlar
-            const bOrder = ['r','n','b','q','k','b','n','r'];
             for(let i=0; i<8; i++) {
-                boardState[i] = { type: bOrder[i], color: 'black' };
-                boardState[i+8] = { type: 'p', color: 'black' };
+                board[i] = { type: layout[i], color: 'b' };
+                board[i+8] = { type: 'p', color: 'b' };
+                board[48+i] = { type: 'p', color: 'w' };
+                board[56+i] = { type: layout[i], color: 'w' };
             }
-
-            // Beyaz Taşlar
-            for(let i=0; i<8; i++) {
-                boardState[48+i] = { type: 'p', color: 'white' };
-                boardState[56+i] = { type: bOrder[i], color: 'white' };
-            }
-
             render();
-            loadProgress();
         }
 
         function render() {
-            boardElement.innerHTML = '';
-            boardState.forEach((piece, index) => {
+            boardEl.innerHTML = '';
+            for(let i=0; i<64; i++) {
                 const square = document.createElement('div');
                 square.className = 'square';
                 
-                const isDark = (Math.floor(index / 8) + index) % 2 === 1;
-                square.style.backgroundColor = isDark ? 'var(--square-dark)' : 'var(--square-light)';
+                // Kare Rengi
+                const row = Math.floor(i / 8);
+                const col = i % 8;
+                square.style.backgroundColor = (row + col) % 2 === 0 ? 'var(--sq-l)' : 'var(--sq-d)';
 
-                if(piece) {
-                    square.textContent = pieces[piece.color][piece.type];
-                    square.style.color = piece.color === 'white' ? '#fff' : '#000';
+                if(board[i]) {
+                    const p = document.createElement('div');
+                    p.className = 'piece';
+                    p.textContent = pieceIcons[board[i].color][board[i].type];
+                    p.style.color = board[i].color === 'w' ? '#fff' : '#000';
+                    square.appendChild(p);
                 }
 
-                if(selectedSquare === index) square.classList.add('selected');
+                if(selectedIdx === i) square.classList.add('selected');
 
-                square.onclick = () => handleSquareClick(index);
-                boardElement.appendChild(square);
-            });
+                square.onclick = () => handleClick(i);
+                boardEl.appendChild(square);
+            }
         }
 
-        function handleSquareClick(index) {
-            const piece = boardState[index];
+        function handleClick(i) {
+            const piece = board[i];
 
-            if (selectedSquare === null) {
-                if (piece && piece.color === turn) {
-                    selectedSquare = index;
+            if(selectedIdx === null) {
+                if(piece && piece.color === turn) {
+                    selectedIdx = i;
                 }
             } else {
-                // Taşı Taşı
-                if (selectedSquare !== index) {
-                    movePiece(selectedSquare, index);
+                if(i !== selectedIdx) {
+                    executeMove(selectedIdx, i);
                 }
-                selectedSquare = null;
+                selectedIdx = null;
             }
             render();
         }
 
-        function movePiece(from, to) {
-            const movingPiece = boardState[from];
+        function executeMove(from, to) {
+            // Basit hareket mantığı (Kural kontrolü buraya eklenebilir)
+            const movingPiece = board[from];
+            board[to] = movingPiece;
+            board[from] = null;
+
+            // Sıra değişimi
+            turn = turn === 'w' ? 'b' : 'w';
+            updateUI();
             
-            // Basit yer değiştirme mantığı
-            boardState[to] = movingPiece;
-            boardState[from] = null;
+            // Ses efekti simülasyonu veya titreşim
+            if(window.navigator.vibrate) window.navigator.vibrate(10);
             
-            // Sırayı Değiştir
-            turn = turn === 'white' ? 'black' : 'white';
-            infoElement.innerHTML = `Sıra: <b>${turn === 'white' ? 'Beyaz' : 'Siyah'}</b>`;
-            
-            saveProgress();
-            addHistory(`${from} -> ${to}`);
+            logMove(from, to, movingPiece);
         }
 
-        function changeTheme(theme) {
-            document.body.className = theme;
-            localStorage.setItem('chess_theme', theme);
+        function updateUI() {
+            turnText.textContent = turn === 'w' ? 'Beyazın Sırası' : 'Siyahın Sırası';
+            turnDot.className = turn === 'w' ? 'dot' : 'dot black';
         }
 
-        function addHistory(text) {
-            const entry = document.createElement('div');
-            entry.textContent = text;
-            historyElement.prepend(entry);
-        }
-
-        function saveProgress() {
-            localStorage.setItem('chess_state', JSON.stringify({
-                board: boardState,
-                turn: turn
-            }));
-        }
-
-        function loadProgress() {
-            const saved = localStorage.getItem('chess_state');
-            const theme = localStorage.getItem('chess_theme');
-            if(theme) {
-                document.body.className = theme;
-                document.getElementById('theme-select').value = theme;
-            }
-            if(saved) {
-                const data = JSON.parse(saved);
-                boardState = data.board;
-                turn = data.turn;
-                render();
-            }
+        function logMove(f, t, p) {
+            const div = document.createElement('div');
+            const coords = (idx) => String.fromCharCode(97 + (idx % 8)) + (8 - Math.floor(idx / 8));
+            div.textContent = `${p.type.toUpperCase()}: ${coords(f)} → ${coords(t)}`;
+            historyEl.prepend(div);
         }
 
         function resetGame() {
-            localStorage.removeItem('chess_state');
-            location.reload();
+            turn = 'w';
+            selectedIdx = null;
+            historyEl.innerHTML = '';
+            updateUI();
+            setup();
         }
 
-        // Başlat
-        initBoard();
-
+        setup();
     </script>
 </body>
 </html>
-
