@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Fusion | Minimalist & Modern</title>
+    <style>
+        /* --- CSS: Tasarım ve Glassmorphism --- */
+        :root {
+            --bg-color: #0f172a;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent: #6366f1;
+            --text: #f8fafc;
+            --square-light: rgba(255, 255, 255, 0.1);
+            --square-dark: rgba(0, 0, 0, 0.2);
+        }
+
+        /* Temalar */
+        body.theme-light {
+            --bg-color: #f1f5f9;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(0, 0, 0, 0.1);
+            --text: #1e293b;
+            --square-light: #e2e8f0;
+            --square-dark: #94a3b8;
+        }
+
+        body.theme-midnight {
+            --bg-color: #020617;
+            --accent: #38bdf8;
+            --square-light: rgba(56, 189, 248, 0.1);
+            --square-dark: rgba(0, 0, 0, 0.4);
+        }
+
+        * { margin: 0; padding: 0; box-box: border-box; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            transition: background 0.5s ease;
+        }
+
+        /* Arka Plan Efekti */
+        .blob {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: linear-gradient(135deg, var(--accent), #a855f7);
+            filter: blur(100px);
+            border-radius: 50%;
+            z-index: -1;
+            opacity: 0.4;
+            animation: float 20s infinite alternate;
+        }
+
+        @keyframes float {
+            from { transform: translate(-20%, -20%); }
+            to { transform: translate(20%, 20%); }
+        }
+
+        .main-container {
+            display: flex;
+            width: 90%;
+            max-width: 1100px;
+            height: 85vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            gap: 20px;
+        }
+
+        /* Oyun Alanı */
+        .board-container {
+            flex: 1.5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            aspect-ratio: 1/1;
+            width: 100%;
+            max-width: 550px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0,0,0,0.2);
+        }
+
+        .square {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 2.5rem;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .square:hover { transform: scale(1.05); z-index: 10; }
+        .square.selected { box-shadow: inset 0 0 20px var(--accent); }
+        .square.last-move { background-color: rgba(99, 102, 241, 0.3) !important; }
+
+        /* Panel Alanı */
+        .side-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            padding: 20px;
+        }
+
+        h2 { font-weight: 300; letter-spacing: 1px; margin-bottom: 10px; }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        select, button {
+            width: 100%;
+            padding: 10px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text);
+            border-radius: 8px;
+            margin-top: 5px;
+            outline: none;
+        }
+
+        .history-box {
+            flex-grow: 1;
+            background: rgba(0,0,0,0.1);
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 0.9rem;
+            overflow-y: auto;
+        }
+
+        /* Mobil Uyumluluk */
+        @media (max-width: 768px) {
+            .main-container { flex-direction: column; height: auto; overflow-y: auto; margin: 20px 0; }
+            #board { max-width: 90vw; }
+        }
+    </style>
+</head>
+<body class="theme-dark">
+
+    <div class="blob"></div>
+
+    <main class="main-container">
+        <section class="board-container">
+            <div id="board"></div>
+        </section>
+
+        <aside class="side-panel">
+            <div class="control-group">
+                <h2>Chess Fusion</h2>
+                <div id="game-info">Sıra: <b>Beyaz</b></div>
+            </div>
+
+            <div class="control-group">
+                <label>Oyun Modu</label>
+                <select id="mode-select">
+                    <option value="classic">Klasik (1v1 Offline)</option>
+                    <option value="3player" disabled>3 Kişilik (Yakında!)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Tema</label>
+                <select id="theme-select" onchange="changeTheme(this.value)">
+                    <option value="theme-dark">Dark Mode</option>
+                    <option value="theme-midnight">Midnight Blue</option>
+                    <option value="theme-light">Light Mode</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Taş Tasarımı</label>
+                <select id="piece-select">
+                    <option value="classic">Klasik (Unicode)</option>
+                    <option value="modern">Minimalist</option>
+                </select>
+            </div>
+
+            <div class="history-box" id="history">
+                Hamle geçmişi burada görünecek...
+            </div>
+
+            <button onclick="resetGame()">Oyunu Sıfırla</button>
+        </aside>
+    </main>
+
+    <script>
+        /* --- JS: Oyun Mantığı --- */
+        const boardElement = document.getElementById('board');
+        const infoElement = document.getElementById('game-info');
+        const historyElement = document.getElementById('history');
+        
+        let boardState = [];
+        let selectedSquare = null;
+        let turn = 'white';
+
+        // Taşların Unicode Karşılıkları
+        const pieces = {
+            white: { k: '♔', q: '♕', r: '♖', b: '♗', n: '♘', p: '♙' },
+            black: { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' }
+        };
+
+        function initBoard() {
+            // Başlangıç dizilimi (Basit bir şablon)
+            boardState = Array(64).fill(null);
+            
+            // Siyah Taşlar
+            const bOrder = ['r','n','b','q','k','b','n','r'];
+            for(let i=0; i<8; i++) {
+                boardState[i] = { type: bOrder[i], color: 'black' };
+                boardState[i+8] = { type: 'p', color: 'black' };
+            }
+
+            // Beyaz Taşlar
+            for(let i=0; i<8; i++) {
+                boardState[48+i] = { type: 'p', color: 'white' };
+                boardState[56+i] = { type: bOrder[i], color: 'white' };
+            }
+
+            render();
+            loadProgress();
+        }
+
+        function render() {
+            boardElement.innerHTML = '';
+            boardState.forEach((piece, index) => {
+                const square = document.createElement('div');
+                square.className = 'square';
+                
+                const isDark = (Math.floor(index / 8) + index) % 2 === 1;
+                square.style.backgroundColor = isDark ? 'var(--square-dark)' : 'var(--square-light)';
+
+                if(piece) {
+                    square.textContent = pieces[piece.color][piece.type];
+                    square.style.color = piece.color === 'white' ? '#fff' : '#000';
+                }
+
+                if(selectedSquare === index) square.classList.add('selected');
+
+                square.onclick = () => handleSquareClick(index);
+                boardElement.appendChild(square);
+            });
+        }
+
+        function handleSquareClick(index) {
+            const piece = boardState[index];
+
+            if (selectedSquare === null) {
+                if (piece && piece.color === turn) {
+                    selectedSquare = index;
+                }
+            } else {
+                // Taşı Taşı
+                if (selectedSquare !== index) {
+                    movePiece(selectedSquare, index);
+                }
+                selectedSquare = null;
+            }
+            render();
+        }
+
+        function movePiece(from, to) {
+            const movingPiece = boardState[from];
+            
+            // Basit yer değiştirme mantığı
+            boardState[to] = movingPiece;
+            boardState[from] = null;
+            
+            // Sırayı Değiştir
+            turn = turn === 'white' ? 'black' : 'white';
+            infoElement.innerHTML = `Sıra: <b>${turn === 'white' ? 'Beyaz' : 'Siyah'}</b>`;
+            
+            saveProgress();
+            addHistory(`${from} -> ${to}`);
+        }
+
+        function changeTheme(theme) {
+            document.body.className = theme;
+            localStorage.setItem('chess_theme', theme);
+        }
+
+        function addHistory(text) {
+            const entry = document.createElement('div');
+            entry.textContent = text;
+            historyElement.prepend(entry);
+        }
+
+        function saveProgress() {
+            localStorage.setItem('chess_state', JSON.stringify({
+                board: boardState,
+                turn: turn
+            }));
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem('chess_state');
+            const theme = localStorage.getItem('chess_theme');
+            if(theme) {
+                document.body.className = theme;
+                document.getElementById('theme-select').value = theme;
+            }
+            if(saved) {
+                const data = JSON.parse(saved);
+                boardState = data.board;
+                turn = data.turn;
+                render();
+            }
+        }
+
+        function resetGame() {
+            localStorage.removeItem('chess_state');
+            location.reload();
+        }
+
+        // Başlat
+        initBoard();
+
+    </script>
+</body>
+</html>
+
